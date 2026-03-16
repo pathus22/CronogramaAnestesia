@@ -72,9 +72,9 @@ function renderCalendar() {
     const currentIndex = availableMonths.indexOf(monthKey);
     
     // Leer el objeto nuevo y extraer dias y feriados
-    const monthDataObj = cronogramaData[monthKey] || { dias: [], feriados: [] };
+    const monthDataObj = cronogramaData[monthKey] || { dias: [], feriados: {} };
     const daysData = Array.isArray(monthDataObj) ? monthDataObj : (monthDataObj.dias || []);
-    const feriadosDelMes = Array.isArray(monthDataObj) ? [] : (monthDataObj.feriados || []);
+    const feriadosDelMes = Array.isArray(monthDataObj) ? {} : (monthDataObj.feriados || {});
 
     // Primer día del mes (0 = Domingo, 1 = Lunes, etc.) - Ajustamos para que Lunes sea 0
     let firstDay = new Date(year, month, 1).getDay();
@@ -100,7 +100,13 @@ function renderCalendar() {
         let cellClasses = "";
         let visualDate = new Date(year, month, day);
         if (visualDate.getDay() === 0 || visualDate.getDay() === 6) cellClasses += "weekend-cell ";
-        if (feriadosDelMes.includes(day)) cellClasses += "holiday-cell ";
+        
+        const holidayName = feriadosDelMes[day];
+        if (holidayName) {
+            cellClasses += "holiday-cell ";
+            dayCell.setAttribute('data-tooltip', holidayName);
+        }
+        
         if (cellClasses) dayCell.className = cellClasses.trim();
         
         // Buscar datos para este día
@@ -187,8 +193,8 @@ function getFeriadoStatus(y, m, d) {
     const checkD = date.getDate();
     const key = `${checkY}-${String(checkM + 1).padStart(2, '0')}`;
     const targetMonthObj = cronogramaData[key] || {};
-    const targetFeriados = Array.isArray(targetMonthObj) ? [] : (targetMonthObj.feriados || []);
-    return targetFeriados.includes(checkD);
+    const targetFeriados = Array.isArray(targetMonthObj) ? {} : (targetMonthObj.feriados || {});
+    return targetFeriados.hasOwnProperty(checkD);
 }
 
 function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName, month) {

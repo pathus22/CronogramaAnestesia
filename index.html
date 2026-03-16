@@ -229,6 +229,66 @@
             background-color: #fff5f5 !important; /* Rojizo muy sutil para feriado en finde */
         }
 
+        /* Tooltip Premium para Feriados */
+        .holiday-cell {
+            cursor: help;
+        }
+
+        .holiday-cell::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 105%;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background: #2d3748;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 100;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+            font-weight: 400;
+        }
+
+        .holiday-cell:hover::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Flecha del tooltip */
+        .holiday-cell::before {
+            content: '';
+            position: absolute;
+            bottom: 95%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #2d3748;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .holiday-cell:hover::before {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Ajustes para móviles (desactivar tooltip hover para evitar baches) */
+        @media (max-width: 768px) {
+            .holiday-cell::after, .holiday-cell::before {
+                display: none !important;
+            }
+        }
+
         /* Leyenda al final */
         .legend {
             display: flex;

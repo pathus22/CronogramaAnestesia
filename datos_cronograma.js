@@ -3,13 +3,14 @@
 // Los doctores disponibles son identificados por un key "id", esto matchea las clases CSS (ej: "gonzalez", "paglia").
 
 const cronogramaData = {
-    "2026-01": { feriados: [{day: 1, name: "Año Nuevo"}], dias: [] },
-    "2026-02": { feriados: [{day: 16, name: "Carnaval"}, {day: 17, name: "Carnaval"}], dias: [] },
+    "2026-01": { feriados: { 1: "Año Nuevo" }, dias: [] },
+    "2026-02": { feriados: { 16: "Carnaval", 17: "Carnaval" }, dias: [] },
     "2026-03": {
-        feriados: [{day: 23, name: "Feriado con Fines Turísticos"}, {day: 24, name: "Día Nacional de la Memoria por la Verdad y la Justicia"}],
+        feriados: { 
+            23: "Feriado con fines turísticos", 
+            24: "Día Nacional de la Memoria por la Verdad y la Justicia" 
+        },
         dias: [
-            // Las fechas son índices 1-indexed. Se omite el tipo "guardia" como asunción predeterminada si falta,
-            // pero se documenta { type: 'guardia' } como estándar visual.
             { day: 1, shifts: [ { id: "gonzalez" } ] },
             { day: 2, shifts: [ { id: "gonzalez" } ] },
             { day: 3, shifts: [ { id: "gonzalez", obs: "(hasta 20 hs)" } ] },
@@ -43,17 +44,15 @@ const cronogramaData = {
             { day: 31, shifts: [ { id: "gonzalez", obs: "(hasta 20 hs)" } ] }
         ]
     },
-    // NOTA: Para añadir feriados locales (ej. Aniversario de San Vicente, ponerlo en el mes correspondiente separados por comas)
-    // Ejemplo: Si hubiese feriado el 5 y 22 de Abril: { feriados: [{day: 2, name: ".."}, {day: 5, name: "Local"}], dias: [...] }
-    "2026-04": { feriados: [{day: 2, name: "Día del Veterano y de los Caídos en Malvinas"}, {day: 3, name: "Viernes Santo"}], dias: [] },
-    "2026-05": { feriados: [{day: 1, name: "Día del Trabajador"}, {day: 25, name: "Día de la Revolución de Mayo"}], dias: [] },
-    "2026-06": { feriados: [{day: 15, name: "Paso a la Inmortalidad del Gral. Martín Miguel de Güemes"}, {day: 20, name: "Paso a la Inmortalidad del Gral. Manuel Belgrano"}], dias: [] },
-    "2026-07": { feriados: [{day: 9, name: "Día de la Independencia"}, {day: 10, name: "Feriado con Fines Turísticos"}], dias: [] },
-    "2026-08": { feriados: [{day: 17, name: "Paso a la Inmortalidad del Gral. José de San Martín"}], dias: [] },
-    "2026-09": { feriados: [], dias: [] },
-    "2026-10": { feriados: [{day: 12, name: "Día del Respeto a la Diversidad Cultural"}], dias: [] },
-    "2026-11": { feriados: [{day: 20, name: "Día de la Soberanía Nacional"}, {day: 23, name: "Feriado con Fines Turísticos"}], dias: [] },
-    "2026-12": { feriados: [{day: 8, name: "Día de la Inmaculada Concepción"}, {day: 25, name: "Navidad"}], dias: [] }
+    "2026-04": { feriados: { 2: "Día del Veterano y de los Caídos en la Guerra de Malvinas", 3: "Viernes Santo" }, dias: [] },
+    "2026-05": { feriados: { 1: "Día del Trabajador", 25: "Día de la Revolución de Mayo" }, dias: [] },
+    "2026-06": { feriados: { 15: "Paso a la Inmortalidad del Gral. Güemes", 20: "Paso a la Inmortalidad del Gral. Belgrano" }, dias: [] },
+    "2026-07": { feriados: { 9: "Día de la Independencia", 10: "Feriado con fines turísticos" }, dias: [] },
+    "2026-08": { feriados: { 17: "Paso a la Inmortalidad del Gral. San Martín" }, dias: [] },
+    "2026-09": { feriados: {}, dias: [] },
+    "2026-10": { feriados: { 12: "Día del Respeto a la Diversidad Cultural" }, dias: [] },
+    "2026-11": { feriados: { 20: "Día de la Soberanía Nacional", 23: "Feriado con fines turísticos" }, dias: [] },
+    "2026-12": { feriados: { 8: "Inmaculada Concepción", 25: "Navidad" }, dias: [] }
 };
 
 // Mapeo amigable de nombres para renderizado
