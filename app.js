@@ -188,7 +188,6 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
             totalHours: 0,
             g24: 0,
             g18: 0,
-            g12: 0,
             g6: 0
         };
     });
@@ -207,35 +206,26 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
 
             let hoursAssigned = 0;
 
-            if (shift.obs && shift.obs.includes("hasta 20 hs")) {
-                hoursAssigned = 12;
-                stats[docId].g12 += 1;
-            } else if (shift.obs && shift.obs.includes("8 a 14")) {
-                hoursAssigned = 6;
-                stats[docId].g6 += 1;
+            if (shift.obs && shift.obs.includes("8 a 14")) {
+                hoursAssigned = 18; // De 20hs del dia ant a 14hs de hoy
             } else {
-                // Si no hay observación restrictiva, se asume que toma el resto del día
+                // "(hasta 20 hs)" o aclaración vacía es siempre la guardia entera de 24h
                 hoursAssigned = pendingHours;
-                if (hoursAssigned === 24) {
-                    stats[docId].g24 += 1;
-                } else if (hoursAssigned === 18) {
-                    stats[docId].g18 += 1;
-                } else if (hoursAssigned === 12) {
-                    stats[docId].g12 += 1;
-                } else if (hoursAssigned === 6) {
-                    stats[docId].g6 += 1;
-                }
             }
             
             // Evitar asignar más de las horas disponibles en el día
             hoursAssigned = Math.min(hoursAssigned, pendingHours);
             
+            if (hoursAssigned === 24) stats[docId].g24 += 1;
+            else if (hoursAssigned === 18) stats[docId].g18 += 1;
+            else if (hoursAssigned === 6) stats[docId].g6 += 1;
+
             stats[docId].totalHours += hoursAssigned;
             pendingHours -= hoursAssigned;
         });
 
-        // Si quedaron horas pendientes en el día, se las asignamos al doc del turno siguiente.
-        // Si no hay más turnos hoy, se le asigna al doc del PRIMER turno del día siguiente
+        // Si quedaron horas pendientes en el bloque de 24h (por ejemplo, porque el primer doc hizo de 20hs a 14hs = 18hs)
+        // Se le asigna al siguiente documento del turno de hoy, y si no hay, al que entra mañana a las 20hs
         if (pendingHours > 0) {
             let nextDocAssigned = null;
             let iterDay = day + 1;
@@ -248,12 +238,11 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
                 iterDay++;
             }
 
-            // Si encontró alguien en los días siguientes, le suma el resto
+            // Asignar el resto del bloque de 24h (generalmente 6h)
             if (nextDocAssigned && stats[nextDocAssigned]) {
                 stats[nextDocAssigned].totalHours += pendingHours;
                 
                 if (pendingHours === 18) stats[nextDocAssigned].g18 += 1;
-                else if (pendingHours === 12) stats[nextDocAssigned].g12 += 1;
                 else if (pendingHours === 6) stats[nextDocAssigned].g6 += 1;
             }
         }
@@ -277,13 +266,12 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
         let breakdownHTML = `<div class="stat-breakdown" style="margin-top: 15px; text-align: left; font-size: 0.85rem; color: #4a5568; border-top: 1px solid #e2e8f0; padding-top: 10px;">`;
         if (docStats.g24 > 0) breakdownHTML += `<div>Guardias 24h: <strong>${docStats.g24}</strong></div>`;
         if (docStats.g18 > 0) breakdownHTML += `<div>Guardias 18h: <strong>${docStats.g18}</strong></div>`;
-        if (docStats.g12 > 0) breakdownHTML += `<div>Guardias 12h: <strong>${docStats.g12}</strong></div>`;
         if (docStats.g6 > 0) breakdownHTML += `<div>Guardias 6h: <strong>${docStats.g6}</strong></div>`;
         
-        // Módulos de 12hs individuales
-        const modulosDoc = docStats.totalHours / 12;
+        // Módulos de 24hs individuales (ya no de 12h)
+        const modulosDoc = docStats.totalHours / 24;
         breakdownHTML += `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e0;">
-            Módulos de 12h: <strong>${Math.floor(modulosDoc)}</strong>${modulosDoc % 1 !== 0 ? ' (y ' + (docStats.totalHours % 12) + 'h)' : ''}
+            Módulos (24h): <strong>${Math.floor(modulosDoc)}</strong>${modulosDoc % 1 !== 0 ? ' (y ' + (docStats.totalHours % 24) + 'h)' : ''}
         </div>`;
         breakdownHTML += `</div>`;
 
@@ -297,7 +285,7 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
     });
 
     // Tarjeta del total
-    const modulos12h = totalGeneral / 12;
+    const modulos24h = totalGeneral / 24;
 
     const cardTotal = document.createElement('div');
     cardTotal.className = `stat-card`;
@@ -307,7 +295,7 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
         <div class="stat-value">${totalGeneral}</div>
         <div class="stat-unit">Horas Cubiertas</div>
         <div class="stat-breakdown" style="margin-top: 15px; text-align: left; font-size: 0.85rem; color: #4a5568; border-top: 1px solid #e2e8f0; padding-top: 10px;">
-            <div>Módulos de 12h: <strong>${Math.floor(modulos12h)}</strong>${modulos12h % 1 !== 0 ? ' (y ' + (totalGeneral % 12) + 'h sueltas)' : ''}</div>
+            <div>Módulos de 24h: <strong>${Math.floor(modulos24h)}</strong>${modulos24h % 1 !== 0 ? ' (y ' + (totalGeneral % 24) + 'h sueltas)' : ''}</div>
         </div>
     `;
     statsGridContent.appendChild(cardTotal);
