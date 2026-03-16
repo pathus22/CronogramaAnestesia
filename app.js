@@ -71,10 +71,10 @@ function renderCalendar() {
     const availableMonths = Object.keys(cronogramaData).sort();
     const currentIndex = availableMonths.indexOf(monthKey);
     
-    // Leer el objeto nuevo y extraer dias y feriados
-    const monthDataObj = cronogramaData[monthKey] || { dias: [], feriados: {} };
+    // Leer el objeto de datos del mes
+    const monthDataObj = cronogramaData[monthKey] || {};
     const daysData = monthDataObj.dias || (Array.isArray(monthDataObj) ? monthDataObj : []);
-    const feriadosDelMes = monthDataObj.feriados || {};
+    const feriadosDelMes = (monthDataObj.feriados && typeof monthDataObj.feriados === 'object') ? monthDataObj.feriados : {};
 
     // Primer día del mes (0 = Domingo, 1 = Lunes, etc.) - Ajustamos para que Lunes sea 0
     let firstDay = new Date(year, month, 1).getDay();
@@ -97,17 +97,19 @@ function renderCalendar() {
         const dayCell = document.createElement('td');
         dayCell.setAttribute('data-date', dateStr);
         
-        let cellClasses = "";
-        let visualDate = new Date(year, month, day);
-        if (visualDate.getDay() === 0 || visualDate.getDay() === 6) cellClasses += "weekend-cell ";
         
-        const holidayName = feriadosDelMes[day];
-        if (holidayName) {
-            cellClasses += "holiday-cell ";
-            dayCell.setAttribute('data-tooltip', holidayName);
+        const visualDate = new Date(year, month, day);
+        if (visualDate.getDay() === 0 || visualDate.getDay() === 6) {
+            dayCell.classList.add('weekend-cell');
         }
         
-        if (cellClasses) dayCell.className = cellClasses.trim();
+        // Detección de Feriado (Busca por número o string)
+        const holidayDesc = feriadosDelMes[day] || feriadosDelMes[String(day)];
+        if (holidayDesc) {
+            dayCell.classList.add('holiday-cell');
+            dayCell.setAttribute('data-tooltip', holidayDesc);
+            dayCell.setAttribute('title', holidayDesc); // Respaldo nativo
+        }
         
         // Buscar datos para este día
         const dayData = daysData.find(d => d.day === day);
