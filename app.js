@@ -279,6 +279,12 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
         if (docStats.g18 > 0) breakdownHTML += `<div>Guardias 18h: <strong>${docStats.g18}</strong></div>`;
         if (docStats.g12 > 0) breakdownHTML += `<div>Guardias 12h: <strong>${docStats.g12}</strong></div>`;
         if (docStats.g6 > 0) breakdownHTML += `<div>Guardias 6h: <strong>${docStats.g6}</strong></div>`;
+        
+        // Módulos de 12hs individuales
+        const modulosDoc = docStats.totalHours / 12;
+        breakdownHTML += `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e0;">
+            Módulos de 12h: <strong>${Math.floor(modulosDoc)}</strong>${modulosDoc % 1 !== 0 ? ' (y ' + (docStats.totalHours % 12) + 'h)' : ''}
+        </div>`;
         breakdownHTML += `</div>`;
 
         card.innerHTML = `
