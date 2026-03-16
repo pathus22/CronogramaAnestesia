@@ -181,9 +181,17 @@ btnToggleStats.addEventListener('click', () => {
 function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) {
     statsMonthTitle.textContent = `Horas Asignadas - ${monthName} ${yearName}`;
     
-    // Objeto para acumular horas de cada doctor
-    const hours = {};
-    Object.keys(doctorNames).forEach(id => hours[id] = 0);
+    // Objeto para acumular estadísticas detalladas de cada doctor
+    const stats = {};
+    Object.keys(doctorNames).forEach(id => {
+        stats[id] = {
+            totalHours: 0,
+            g24: 0,
+            g12: 0,
+            g6: 0,
+            covers: 0 // Coberturas de horas restantes (arrastre)
+        };
+    });
     
     // Procesar cada día secuencialmente para poder arrastrar horas
     for (let day = 1; day <= totalDays; day++) {
@@ -195,25 +203,30 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
         // Procesar los turnos del día en orden
         dayData.shifts.forEach((shift, index) => {
             const docId = shift.id;
-            
-            // Si el doctor no estaba registrado, lo inicializamos
-            if (hours[docId] === undefined) hours[docId] = 0;
+            if (!stats[docId]) return;
 
             let hoursAssigned = 0;
 
             if (shift.obs && shift.obs.includes("hasta 20 hs")) {
                 hoursAssigned = 12;
+                stats[docId].g12 += 1;
             } else if (shift.obs && shift.obs.includes("8 a 14")) {
                 hoursAssigned = 6;
+                stats[docId].g6 += 1;
             } else {
                 // Si no hay observación restrictiva, se asume que toma el resto del día
                 hoursAssigned = pendingHours;
+                if (hoursAssigned === 24) {
+                    stats[docId].g24 += 1;
+                } else if (hoursAssigned > 0) {
+                    stats[docId].covers += 1; // Cubriendo el resto del día mismo día
+                }
             }
             
             // Evitar asignar más de las horas disponibles en el día
             hoursAssigned = Math.min(hoursAssigned, pendingHours);
             
-            hours[docId] += hoursAssigned;
+            stats[docId].totalHours += hoursAssigned;
             pendingHours -= hoursAssigned;
         });
 
@@ -232,9 +245,9 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
             }
 
             // Si encontró alguien en los días siguientes, le suma el resto
-            if (nextDocAssigned) {
-                if (hours[nextDocAssigned] === undefined) hours[nextDocAssigned] = 0;
-                hours[nextDocAssigned] += pendingHours;
+            if (nextDocAssigned && stats[nextDocAssigned]) {
+                stats[nextDocAssigned].totalHours += pendingHours;
+                stats[nextDocAssigned].covers += 1; // Suma una cobertura por arrastre
             }
         }
     }
@@ -243,19 +256,29 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
     statsGridContent.innerHTML = '';
     let totalGeneral = 0;
 
-    Object.keys(hours).forEach(docId => {
-        const val = hours[docId];
-        if (val === 0) return; // No mostrar doctores sin horas este mes
+    Object.keys(stats).forEach(docId => {
+        const docStats = stats[docId];
+        if (docStats.totalHours === 0) return; // No mostrar doctores sin horas este mes
         
-        totalGeneral += val;
+        totalGeneral += docStats.totalHours;
         const name = doctorNames[docId] || docId;
         
         const card = document.createElement('div');
         card.className = `stat-card doctor-${docId}`;
+        
+        // Generar lista de detalles
+        let breakdownHTML = `<div class="stat-breakdown" style="margin-top: 15px; text-align: left; font-size: 0.85rem; color: #4a5568; border-top: 1px solid #e2e8f0; padding-top: 10px;">`;
+        if (docStats.g24 > 0) breakdownHTML += `<div>Guardias 24h: <strong>${docStats.g24}</strong></div>`;
+        if (docStats.g12 > 0) breakdownHTML += `<div>Guardias 12h: <strong>${docStats.g12}</strong></div>`;
+        if (docStats.g6 > 0) breakdownHTML += `<div>Guardias 6h: <strong>${docStats.g6}</strong></div>`;
+        if (docStats.covers > 0) breakdownHTML += `<div>Coberturas parciales: <strong>${docStats.covers}</strong></div>`;
+        breakdownHTML += `</div>`;
+
         card.innerHTML = `
             <div class="stat-title">Dr/Dra. ${name}</div>
-            <div class="stat-value">${val}</div>
-            <div class="stat-unit">Horas</div>
+            <div class="stat-value">${docStats.totalHours}</div>
+            <div class="stat-unit">Horas Totales</div>
+            ${breakdownHTML}
         `;
         statsGridContent.appendChild(card);
     });
