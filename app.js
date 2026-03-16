@@ -187,9 +187,9 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
         stats[id] = {
             totalHours: 0,
             g24: 0,
+            g18: 0,
             g12: 0,
-            g6: 0,
-            covers: 0 // Coberturas de horas restantes (arrastre)
+            g6: 0
         };
     });
     
@@ -218,8 +218,12 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
                 hoursAssigned = pendingHours;
                 if (hoursAssigned === 24) {
                     stats[docId].g24 += 1;
-                } else if (hoursAssigned > 0) {
-                    stats[docId].covers += 1; // Cubriendo el resto del día mismo día
+                } else if (hoursAssigned === 18) {
+                    stats[docId].g18 += 1;
+                } else if (hoursAssigned === 12) {
+                    stats[docId].g12 += 1;
+                } else if (hoursAssigned === 6) {
+                    stats[docId].g6 += 1;
                 }
             }
             
@@ -247,7 +251,10 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
             // Si encontró alguien en los días siguientes, le suma el resto
             if (nextDocAssigned && stats[nextDocAssigned]) {
                 stats[nextDocAssigned].totalHours += pendingHours;
-                stats[nextDocAssigned].covers += 1; // Suma una cobertura por arrastre
+                
+                if (pendingHours === 18) stats[nextDocAssigned].g18 += 1;
+                else if (pendingHours === 12) stats[nextDocAssigned].g12 += 1;
+                else if (pendingHours === 6) stats[nextDocAssigned].g6 += 1;
             }
         }
     }
@@ -269,9 +276,9 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
         // Generar lista de detalles
         let breakdownHTML = `<div class="stat-breakdown" style="margin-top: 15px; text-align: left; font-size: 0.85rem; color: #4a5568; border-top: 1px solid #e2e8f0; padding-top: 10px;">`;
         if (docStats.g24 > 0) breakdownHTML += `<div>Guardias 24h: <strong>${docStats.g24}</strong></div>`;
+        if (docStats.g18 > 0) breakdownHTML += `<div>Guardias 18h: <strong>${docStats.g18}</strong></div>`;
         if (docStats.g12 > 0) breakdownHTML += `<div>Guardias 12h: <strong>${docStats.g12}</strong></div>`;
         if (docStats.g6 > 0) breakdownHTML += `<div>Guardias 6h: <strong>${docStats.g6}</strong></div>`;
-        if (docStats.covers > 0) breakdownHTML += `<div>Coberturas parciales: <strong>${docStats.covers}</strong></div>`;
         breakdownHTML += `</div>`;
 
         card.innerHTML = `
