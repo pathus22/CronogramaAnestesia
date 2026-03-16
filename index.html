@@ -210,11 +210,23 @@
             border: 1px solid rgba(237, 137, 54, 0.3);
         }
 
-        /* Celdas vacías */
+        /* Celdas especiales y vacías */
         .empty-cell {
             background-color: #f7fafc;
             background-image: radial-gradient(#cbd5e0 1px, transparent 1px);
             background-size: 12px 12px;
+        }
+
+        .weekend-cell {
+            background-color: #f8fafc !important; /* Gris azulado muy sutil */
+        }
+
+        .holiday-cell {
+            background-color: #fffaf0 !important; /* Naranja/Amarillo muy sutil */
+        }
+
+        .weekend-cell.holiday-cell {
+            background-color: #fff5f5 !important; /* Rojizo muy sutil para feriado en finde */
         }
 
         /* Leyenda al final */

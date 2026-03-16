@@ -71,15 +71,10 @@ function renderCalendar() {
     const availableMonths = Object.keys(cronogramaData).sort();
     const currentIndex = availableMonths.indexOf(monthKey);
     
-    // Siempre permitimos navegar si queremos ver meses vacíos, o podemos restringirlo a solo los meses con datos.
-    // Restringiendo a solo meses con datos:
-    /*
-    btnPrev.disabled = currentIndex <= 0;
-    btnNext.disabled = currentIndex === -1 || currentIndex >= availableMonths.length - 1;
-    */
-    // Alternativa: Mostrar mes "Sin datos" si navegamos fuera de rango. Lo dejamos libre por ahora, asumiendo crecimiento orgánico.
-
-    const daysData = cronogramaData[monthKey] || [];
+    // Leer el objeto nuevo y extraer dias y feriados
+    const monthDataObj = cronogramaData[monthKey] || { dias: [], feriados: [] };
+    const daysData = Array.isArray(monthDataObj) ? monthDataObj : (monthDataObj.dias || []);
+    const feriadosDelMes = Array.isArray(monthDataObj) ? [] : (monthDataObj.feriados || []);
 
     // Primer día del mes (0 = Domingo, 1 = Lunes, etc.) - Ajustamos para que Lunes sea 0
     let firstDay = new Date(year, month, 1).getDay();
@@ -101,6 +96,12 @@ function renderCalendar() {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const dayCell = document.createElement('td');
         dayCell.setAttribute('data-date', dateStr);
+        
+        let cellClasses = "";
+        let visualDate = new Date(year, month, day);
+        if (visualDate.getDay() === 0 || visualDate.getDay() === 6) cellClasses += "weekend-cell ";
+        if (feriadosDelMes.includes(day)) cellClasses += "holiday-cell ";
+        if (cellClasses) dayCell.className = cellClasses.trim();
         
         // Buscar datos para este día
         const dayData = daysData.find(d => d.day === day);
@@ -152,7 +153,7 @@ function renderCalendar() {
     });
 
     // Calcular y actualizar estadísticas ocultas/visibles
-    calcularYMostrarEstadisticas(daysData, daysInMonth, monthNames[month], year);
+    calcularYMostrarEstadisticas(daysData, daysInMonth, monthNames[month], year, month);
 }
 
 // ---- LOGICA DE ESTADISTICAS ----
@@ -178,7 +179,20 @@ btnToggleStats.addEventListener('click', () => {
     }
 });
 
-function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) {
+// Helper para Feriados inter-mensuales
+function getFeriadoStatus(y, m, d) {
+    const date = new Date(y, m, d);
+    const checkY = date.getFullYear();
+    const checkM = date.getMonth();
+    const checkD = date.getDate();
+    const key = `${checkY}-${String(checkM + 1).padStart(2, '0')}`;
+    const targetMonthObj = cronogramaData[key] || {};
+    const targetFeriados = Array.isArray(targetMonthObj) ? [] : (targetMonthObj.feriados || []);
+    return targetFeriados.includes(checkD);
+}
+
+function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName, month) {
+    const year = parseInt(yearName);
     statsMonthTitle.textContent = `Horas Asignadas - ${monthName} ${yearName}`;
     
     // Objeto para acumular estadísticas detalladas de cada doctor
@@ -186,9 +200,11 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
     Object.keys(doctorNames).forEach(id => {
         stats[id] = {
             totalHours: 0,
-            g24: 0,
-            g18: 0,
-            g6: 0
+            g24: 0, g18: 0, g6: 0,
+            horasFindeReloj: 0,
+            horasFeriadoReloj: 0,
+            horasFindeAdmin: 0,
+            horasFeriadoAdmin: 0
         };
     });
     
@@ -198,6 +214,7 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
         if (!dayData || !dayData.shifts || dayData.shifts.length === 0) continue;
         
         let pendingHours = 24; // Cada día tiene 24 horas a repartir
+        let offsetHorasDelBloque = 0; // De 0 a 24
 
         // Procesar los turnos del día en orden
         dayData.shifts.forEach((shift, index) => {
@@ -205,15 +222,9 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
             if (!stats[docId]) return;
 
             let hoursAssigned = 0;
-
-            if (shift.obs && shift.obs.includes("8 a 14")) {
-                hoursAssigned = 18; // De 20hs del dia ant a 14hs de hoy
-            } else {
-                // "(hasta 20 hs)" o aclaración vacía es siempre la guardia entera de 24h
-                hoursAssigned = pendingHours;
-            }
+            if (shift.obs && shift.obs.includes("8 a 14")) hoursAssigned = 18; 
+            else hoursAssigned = pendingHours;
             
-            // Evitar asignar más de las horas disponibles en el día
             hoursAssigned = Math.min(hoursAssigned, pendingHours);
             
             if (hoursAssigned === 24) stats[docId].g24 += 1;
@@ -222,10 +233,27 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
 
             stats[docId].totalHours += hoursAssigned;
             pendingHours -= hoursAssigned;
+
+            // --- Lógica Exacta de Reloj 🕒 ---
+            for (let h = 0; h < hoursAssigned; h++) {
+                let horaBloque = offsetHorasDelBloque + h;
+                let physD = (horaBloque < 4) ? (day - 1) : day; // Primeras 4hs (20 a 24) son physD=day-1
+                let physicalDate = new Date(year, month, physD);
+                
+                if (physicalDate.getDay() === 0 || physicalDate.getDay() === 6) stats[docId].horasFindeReloj += 1;
+                if (getFeriadoStatus(year, month, physD)) stats[docId].horasFeriadoReloj += 1;
+            }
+            
+            // --- Lógica de Módulo Administrativo 🏥 ---
+            // Todo el bloque pertenece conceptualmente al día que comenzó la guardia (day - 1 a las 20hs)
+            let adminDate = new Date(year, month, day - 1);
+            if (adminDate.getDay() === 0 || adminDate.getDay() === 6) stats[docId].horasFindeAdmin += hoursAssigned;
+            if (getFeriadoStatus(year, month, day - 1)) stats[docId].horasFeriadoAdmin += hoursAssigned;
+
+            offsetHorasDelBloque += hoursAssigned;
         });
 
-        // Si quedaron horas pendientes en el bloque de 24h (por ejemplo, porque el primer doc hizo de 20hs a 14hs = 18hs)
-        // Se le asigna al siguiente documento del turno de hoy, y si no hay, al que entra mañana a las 20hs
+        // Si quedaron horas pendientes en el bloque de 24h
         if (pendingHours > 0) {
             let nextDocAssigned = null;
             let iterDay = day + 1;
@@ -240,10 +268,25 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
 
             // Asignar el resto del bloque de 24h (generalmente 6h)
             if (nextDocAssigned && stats[nextDocAssigned]) {
-                stats[nextDocAssigned].totalHours += pendingHours;
+                const docId = nextDocAssigned;
+                stats[docId].totalHours += pendingHours;
                 
-                if (pendingHours === 18) stats[nextDocAssigned].g18 += 1;
-                else if (pendingHours === 6) stats[nextDocAssigned].g6 += 1;
+                if (pendingHours === 18) stats[docId].g18 += 1;
+                else if (pendingHours === 6) stats[docId].g6 += 1;
+                
+                // --- Traspaso Lógica Reloj ---
+                for (let h = 0; h < pendingHours; h++) {
+                    let horaBloque = offsetHorasDelBloque + h;
+                    let physD = (horaBloque < 4) ? (day - 1) : day;
+                    let physicalDate = new Date(year, month, physD);
+                    if (physicalDate.getDay() === 0 || physicalDate.getDay() === 6) stats[docId].horasFindeReloj += 1;
+                    if (getFeriadoStatus(year, month, physD)) stats[docId].horasFeriadoReloj += 1;
+                }
+                
+                // --- Traspaso Lógica Admin ---
+                let adminDate = new Date(year, month, day - 1);
+                if (adminDate.getDay() === 0 || adminDate.getDay() === 6) stats[docId].horasFindeAdmin += pendingHours;
+                if (getFeriadoStatus(year, month, day - 1)) stats[docId].horasFeriadoAdmin += pendingHours;
             }
         }
     }
@@ -273,6 +316,13 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
         breakdownHTML += `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e0;">
             Módulos (24h): <strong>${Math.floor(modulosDoc)}</strong>${modulosDoc % 1 !== 0 ? ' (y ' + (docStats.totalHours % 24) + 'h)' : ''}
         </div>`;
+        
+        // Bloque comparativo de opciones de horas premium (Reloj vs Administrativo)
+        breakdownHTML += `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e0; font-size: 0.8rem; line-height: 1.4;">
+            <div style="margin-bottom: 5px;"><strong>Fines de Semana:</strong><br>Reloj Exacto: ${docStats.horasFindeReloj}h | Módulo Admin: ${docStats.horasFindeAdmin}h</div>
+            <div><strong>Feriados Locales/Nac:</strong><br>Reloj Exacto: ${docStats.horasFeriadoReloj}h | Módulo Admin: ${docStats.horasFeriadoAdmin}h</div>
+        </div>`;
+
         breakdownHTML += `</div>`;
 
         card.innerHTML = `
