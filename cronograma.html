@@ -328,8 +328,61 @@
                 box-sizing: border-box;
             }
 
-            /* Inyectar días de la semana encima de cada tarjeta */
-            td::before {
+            /* Estilo flex para controles de mes */
+            .nav-controls {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 20px;
+                margin-top: 20px;
+                flex-wrap: wrap; /* Permitir que se acomoden si la pantalla es muy pequeña */
+            }
+            
+            .nav-btn {
+                background: #ebf4ff;
+                border: 2px solid #ebf4ff; /* Borde del mismo color para dar grosor */
+                color: #3182ce;
+                padding: 8px 24px;
+                border-radius: 25px; /* Más redondeado, estilo píldora */
+                cursor: pointer;
+                font-weight: 700;
+                font-size: 0.95rem;
+                transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                box-shadow: 0 4px 6px rgba(49, 130, 206, 0.1);
+            }
+            
+            .nav-btn:hover:not(:disabled) {
+                background: #3182ce;
+                border-color: #3182ce;
+                color: #ffffff;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 12px rgba(49, 130, 206, 0.25);
+            }
+            
+            .nav-btn:active:not(:disabled) {
+                transform: translateY(0);
+                box-shadow: 0 2px 4px rgba(49, 130, 206, 0.1);
+            }
+            
+            .nav-btn:disabled {
+                border-color: transparent;
+                color: #a0aec0;
+                background: #f7fafc;
+                box-shadow: none;
+                cursor: not-allowed;
+                opacity: 0.7;
+            }
+
+            .nav-controls .subtitle {
+                font-size: 1.4rem;
+                color: var(--text-main);
+                font-weight: 600;
+                min-width: 170px;
+                margin: 0;
+            }
+
+            /* Inyectar días de la semana dinámicamente en móvil */
+            td[data-dayname]::before {
                 display: block;
                 font-size: 0.85rem;
                 text-transform: uppercase;
@@ -340,14 +393,8 @@
                 border-bottom: 1px solid var(--border-color);
                 padding-bottom: 6px;
                 text-align: left;
+                content: attr(data-dayname);
             }
-            td:nth-child(1)::before { content: "Lunes"; }
-            td:nth-child(2)::before { content: "Martes"; }
-            td:nth-child(3)::before { content: "Miércoles"; }
-            td:nth-child(4)::before { content: "Jueves"; }
-            td:nth-child(5)::before { content: "Viernes"; }
-            td:nth-child(6)::before { content: "Sábado"; }
-            td:nth-child(7)::before { content: "Domingo"; }
         }
     </style>
 </head>
@@ -355,73 +402,23 @@
     <div class="header-container">
         <span class="badge">Servicio Médico</span>
         <h2>Cronograma Anestesiología</h2>
-        <div class="subtitle">Marzo 2026</div>
+        <div class="nav-controls">
+            <button id="btn-prev" class="nav-btn">&laquo; Anterior</button>
+            <div class="subtitle" style="margin: 0; min-width: 140px;">Cargando...</div>
+            <button id="btn-next" class="nav-btn">Siguiente &raquo;</button>
+        </div>
     </div>
 
     <div class="table-wrapper">
         <table>
-            <tr>
-                <th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th>Sábado</th><th>Domingo</th>
-            </tr>
-            <tr>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td>
-                    <div class="flex-col">
-                        <span class="day-number">1</span>
-                        <span class="name gonzalez">Gonzalez</span>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td><div class="flex-col"><span class="day-number">2</span><span class="name gonzalez">Gonzalez</span></div></td>
-                <td><div class="flex-col"><span class="day-number">3</span><span class="name gonzalez">Gonzalez</span><span class="obs">(hasta 20 hs)</span></div></td>
-                <td><div class="flex-col"><span class="day-number">4</span><span class="name paglia">Paglia</span><span class="obs">(hasta 20 hs)</span></div></td>
-                <td><div class="flex-col"><span class="day-number">5</span><span class="name gonzalez">Gonzalez</span></div></td>
-                <td><div class="flex-col"><span class="day-number">6</span><span class="name gonzalez">Gonzalez</span><span class="obs">(hasta 20 hs)</span></div></td>
-                <td><div class="flex-col"><span class="day-number">7</span><span class="name gonzalez">Gonzalez</span></div></td>
-                <td><div class="flex-col"><span class="day-number">8</span><span class="name gonzalez">Gonzalez</span></div></td>
-            </tr>
-            <tr>
-                <td><div class="flex-col"><span class="day-number">9</span><span class="name gonzalez">Gonzalez</span></div></td>
-                <td><div class="flex-col"><span class="day-number">10</span><span class="name gonzalez">Gonzalez</span><span class="obs">(hasta 20 hs)</span></div></td>
-                <td><div class="flex-col"><span class="day-number">11</span><span class="name paglia">Paglia</span><span class="obs">(hasta 20 hs)</span></div></td>
-                <td><div class="flex-col"><span class="day-number">12</span><span class="name gonzalez">Gonzalez</span></div></td>
-                <td><div class="flex-col"><span class="day-number">13</span><span class="name gonzalez">Gonzalez</span></div></td>
-                <td><div class="flex-col"><span class="day-number">14</span><span class="name gonzalez">Gonzalez</span><span class="obs">(8 a 14)</span><span class="name paglia">Paglia</span></div></td>
-                <td><div class="flex-col"><span class="day-number">15</span><span class="name paglia">Paglia</span><span class="obs">(hasta 20 hs)</span></div></td>
-            </tr>
-            <tr>
-                <td><div class="flex-col"><span class="day-number">16</span><span class="name gonzalez">Gonzalez</span></div></td>
-                <td><div class="flex-col"><span class="day-number">17</span><span class="name gonzalez">Gonzalez</span><span class="obs">(hasta 20 hs)</span></div></td>
-                <td><div class="flex-col"><span class="day-number">18</span><span class="name paglia">Paglia</span><span class="obs">(hasta 20 hs)</span></div></td>
-                <td><div class="flex-col"><span class="day-number">19</span><span class="name gonzalez">Gonzalez</span></div></td>
-                <td><div class="flex-col"><span class="day-number">20</span><span class="name gonzalez">Gonzalez</span></div></td>
-                <td><div class="flex-col"><span class="day-number">21</span><span class="name gonzalez">Gonzalez</span></div></td>
-                <td><div class="flex-col"><span class="day-number">22</span><span class="name paglia">Paglia</span></div></td>
-            </tr>
-            <tr>
-                <td><div class="flex-col"><span class="day-number">23</span><span class="name gonzalez">Gonzalez</span></div></td>
-                <td><div class="flex-col"><span class="day-number">24</span><span class="name gonzalez">Gonzalez</span><span class="obs">(hasta 20 hs)</span></div></td>
-                <td><div class="flex-col"><span class="day-number">25</span><span class="name paglia">Paglia</span><span class="obs">(hasta 20 hs)</span></div></td>
-                <td><div class="flex-col"><span class="day-number">26</span><span class="name gonzalez">Gonzalez</span></div></td>
-                <td><div class="flex-col"><span class="day-number">27</span><span class="name paglia">Paglia</span><span class="obs">(hasta 20 hs)</span></div></td>
-                <td><div class="flex-col"><span class="day-number">28</span><span class="name paglia">Paglia</span></div></td>
-                <td><div class="flex-col"><span class="day-number">29</span><span class="name paglia">Paglia</span><span class="obs">(hasta 20 hs)</span></div></td>
-            </tr>
-            <tr>
-                <td><div class="flex-col"><span class="day-number">30</span><span class="name gonzalez">Gonzalez</span></div></td>
-                <td><div class="flex-col"><span class="day-number">31</span><span class="name gonzalez">Gonzalez</span><span class="obs">(hasta 20 hs)</span></div></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-                <td class="empty-cell"></td>
-            </tr>
+            <thead>
+                <tr>
+                    <th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th><th>Sábado</th><th>Domingo</th>
+                </tr>
+            </thead>
+            <tbody id="calendario-body">
+                <!-- Se inyecta dinámicamente con app.js -->
+            </tbody>
         </table>
     </div>
 
@@ -429,5 +426,9 @@
         <div class="legend-item"><div class="legend-color bg-gonzalez"></div> Dr. Gonzalez</div>
         <div class="legend-item"><div class="legend-color bg-paglia"></div> Dr. Paglia</div>
     </div>
+
+    <!-- Scripts de Datos y Lógica -->
+    <script src="datos_cronograma.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
