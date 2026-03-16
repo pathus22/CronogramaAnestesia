@@ -291,6 +291,8 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
     });
 
     // Tarjeta del total
+    const modulos12h = totalGeneral / 12;
+
     const cardTotal = document.createElement('div');
     cardTotal.className = `stat-card`;
     cardTotal.style.borderTop = "4px solid #4a5568";
@@ -298,6 +300,9 @@ function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) 
         <div class="stat-title">Total Servicio</div>
         <div class="stat-value">${totalGeneral}</div>
         <div class="stat-unit">Horas Cubiertas</div>
+        <div class="stat-breakdown" style="margin-top: 15px; text-align: left; font-size: 0.85rem; color: #4a5568; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+            <div>Módulos de 12h: <strong>${Math.floor(modulos12h)}</strong>${modulos12h % 1 !== 0 ? ' (y ' + (totalGeneral % 12) + 'h sueltas)' : ''}</div>
+        </div>
     `;
     statsGridContent.appendChild(cardTotal);
 }
