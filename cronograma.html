@@ -253,6 +253,174 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Panel de Estadísticas */
+        .stats-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 2rem auto;
+            text-align: center;
+        }
+
+        .btn-stats {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(49, 130, 206, 0.4);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-stats:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(49, 130, 206, 0.6);
+            background: linear-gradient(135deg, #3182ce, #2b6cb0);
+        }
+
+        .stats-panel {
+            display: none;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin-top: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.8);
+            text-align: left;
+        }
+
+        .stats-panel.active {
+            display: block;
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .stats-header {
+            font-size: 1.5rem;
+            color: #2d3748;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-weight: 700;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .stat-card {
+            background: #f7fafc;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card.doctor-gonzalez {
+            border-top: 4px solid var(--accent-doctor1);
+            background: linear-gradient(to bottom, var(--accent-doctor1-bg), #ffffff);
+        }
+
+        .stat-card.doctor-paglia {
+            border-top: 4px solid var(--accent-doctor2);
+            background: linear-gradient(to bottom, var(--accent-doctor2-bg), #ffffff);
+        }
+
+        .stat-title {
+            font-size: 1.1rem;
+            color: #4a5568;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1a202c;
+            line-height: 1;
+        }
+
+        .stat-unit {
+            font-size: 0.9rem;
+            color: #718096;
+            margin-top: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        /* Estilo flex para controles de mes */
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap; /* Permitir que se acomoden si la pantalla es muy pequeña */
+        }
+        
+        .nav-btn {
+            background: #ebf4ff;
+            border: 2px solid #ebf4ff; /* Borde del mismo color para dar grosor */
+            color: #3182ce;
+            padding: 8px 24px;
+            border-radius: 25px; /* Más redondeado, estilo píldora */
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 6px rgba(49, 130, 206, 0.1);
+        }
+        
+        .nav-btn:hover:not(:disabled) {
+            background: #3182ce;
+            border-color: #3182ce;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(49, 130, 206, 0.25);
+        }
+        
+        .nav-btn:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(49, 130, 206, 0.1);
+        }
+        
+        .nav-btn:disabled {
+            border-color: transparent;
+            color: #a0aec0;
+            background: #f7fafc;
+            box-shadow: none;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .nav-controls .subtitle {
+            font-size: 1.4rem;
+            color: var(--text-main);
+            font-weight: 600;
+            min-width: 170px;
+            margin: 0;
+            text-align: center;
+        }
+
         /* Responsividad para móviles y pantallas pequeñas */
         @media (max-width: 768px) {
             body { padding: 1rem; }
@@ -328,59 +496,6 @@
                 box-sizing: border-box;
             }
 
-            /* Estilo flex para controles de mes */
-            .nav-controls {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 20px;
-                margin-top: 20px;
-                flex-wrap: wrap; /* Permitir que se acomoden si la pantalla es muy pequeña */
-            }
-            
-            .nav-btn {
-                background: #ebf4ff;
-                border: 2px solid #ebf4ff; /* Borde del mismo color para dar grosor */
-                color: #3182ce;
-                padding: 8px 24px;
-                border-radius: 25px; /* Más redondeado, estilo píldora */
-                cursor: pointer;
-                font-weight: 700;
-                font-size: 0.95rem;
-                transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-                box-shadow: 0 4px 6px rgba(49, 130, 206, 0.1);
-            }
-            
-            .nav-btn:hover:not(:disabled) {
-                background: #3182ce;
-                border-color: #3182ce;
-                color: #ffffff;
-                transform: translateY(-2px);
-                box-shadow: 0 6px 12px rgba(49, 130, 206, 0.25);
-            }
-            
-            .nav-btn:active:not(:disabled) {
-                transform: translateY(0);
-                box-shadow: 0 2px 4px rgba(49, 130, 206, 0.1);
-            }
-            
-            .nav-btn:disabled {
-                border-color: transparent;
-                color: #a0aec0;
-                background: #f7fafc;
-                box-shadow: none;
-                cursor: not-allowed;
-                opacity: 0.7;
-            }
-
-            .nav-controls .subtitle {
-                font-size: 1.4rem;
-                color: var(--text-main);
-                font-weight: 600;
-                min-width: 170px;
-                margin: 0;
-            }
-
             /* Inyectar días de la semana dinámicamente en móvil */
             td[data-dayname]::before {
                 display: block;
@@ -425,6 +540,21 @@
     <div class="legend">
         <div class="legend-item"><div class="legend-color bg-gonzalez"></div> Dr. Gonzalez</div>
         <div class="legend-item"><div class="legend-color bg-paglia"></div> Dr. Paglia</div>
+    </div>
+
+    <!-- Módulo de Estadísticas -->
+    <div class="stats-container">
+        <button id="btn-toggle-stats" class="btn-stats">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+            Cerrar Estadísticas del Mes
+        </button>
+        
+        <div id="stats-panel" class="stats-panel">
+            <h3 class="stats-header" id="stats-month-title">Horas Asignadas</h3>
+            <div class="stats-grid" id="stats-grid-content">
+                <!-- Se inyecta dinámicamente -->
+            </div>
+        </div>
     </div>
 
     <!-- Scripts de Datos y Lógica -->

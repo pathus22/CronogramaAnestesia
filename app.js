@@ -150,6 +150,126 @@ function renderCalendar() {
             cell.setAttribute('data-dayname', dayNamesForCSS[index]);
         });
     });
+
+    // Calcular y actualizar estadísticas ocultas/visibles
+    calcularYMostrarEstadisticas(daysData, daysInMonth, monthNames[month], year);
+}
+
+// ---- LOGICA DE ESTADISTICAS ----
+
+const btnToggleStats = document.getElementById('btn-toggle-stats');
+const statsPanel = document.getElementById('stats-panel');
+const statsMonthTitle = document.getElementById('stats-month-title');
+const statsGridContent = document.getElementById('stats-grid-content');
+
+let statsVisible = false;
+
+// Configurar estado inicial del botón
+btnToggleStats.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg> Ver Estadísticas del Mes`;
+
+btnToggleStats.addEventListener('click', () => {
+    statsVisible = !statsVisible;
+    if (statsVisible) {
+        statsPanel.classList.add('active');
+        btnToggleStats.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg> Ocultar Estadísticas`;
+    } else {
+        statsPanel.classList.remove('active');
+        btnToggleStats.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg> Ver Estadísticas del Mes`;
+    }
+});
+
+function calcularYMostrarEstadisticas(daysData, totalDays, monthName, yearName) {
+    statsMonthTitle.textContent = `Horas Asignadas - ${monthName} ${yearName}`;
+    
+    // Objeto para acumular horas de cada doctor
+    const hours = {};
+    Object.keys(doctorNames).forEach(id => hours[id] = 0);
+    
+    // Procesar cada día secuencialmente para poder arrastrar horas
+    for (let day = 1; day <= totalDays; day++) {
+        const dayData = daysData.find(d => d.day === day);
+        if (!dayData || !dayData.shifts || dayData.shifts.length === 0) continue;
+        
+        let pendingHours = 24; // Cada día tiene 24 horas a repartir
+
+        // Procesar los turnos del día en orden
+        dayData.shifts.forEach((shift, index) => {
+            const docId = shift.id;
+            
+            // Si el doctor no estaba registrado, lo inicializamos
+            if (hours[docId] === undefined) hours[docId] = 0;
+
+            let hoursAssigned = 0;
+
+            if (shift.obs && shift.obs.includes("hasta 20 hs")) {
+                hoursAssigned = 12;
+            } else if (shift.obs && shift.obs.includes("8 a 14")) {
+                hoursAssigned = 6;
+            } else {
+                // Si no hay observación restrictiva, se asume que toma el resto del día
+                hoursAssigned = pendingHours;
+            }
+            
+            // Evitar asignar más de las horas disponibles en el día
+            hoursAssigned = Math.min(hoursAssigned, pendingHours);
+            
+            hours[docId] += hoursAssigned;
+            pendingHours -= hoursAssigned;
+        });
+
+        // Si quedaron horas pendientes en el día, se las asignamos al doc del turno siguiente.
+        // Si no hay más turnos hoy, se le asigna al doc del PRIMER turno del día siguiente
+        if (pendingHours > 0) {
+            let nextDocAssigned = null;
+            let iterDay = day + 1;
+            
+            while (iterDay <= totalDays && !nextDocAssigned) {
+                const nextDayData = daysData.find(d => d.day === iterDay);
+                if (nextDayData && nextDayData.shifts && nextDayData.shifts.length > 0) {
+                    nextDocAssigned = nextDayData.shifts[0].id;
+                }
+                iterDay++;
+            }
+
+            // Si encontró alguien en los días siguientes, le suma el resto
+            if (nextDocAssigned) {
+                if (hours[nextDocAssigned] === undefined) hours[nextDocAssigned] = 0;
+                hours[nextDocAssigned] += pendingHours;
+            }
+        }
+    }
+
+    // Dibujar en el DOM
+    statsGridContent.innerHTML = '';
+    let totalGeneral = 0;
+
+    Object.keys(hours).forEach(docId => {
+        const val = hours[docId];
+        if (val === 0) return; // No mostrar doctores sin horas este mes
+        
+        totalGeneral += val;
+        const name = doctorNames[docId] || docId;
+        
+        const card = document.createElement('div');
+        card.className = `stat-card doctor-${docId}`;
+        card.innerHTML = `
+            <div class="stat-title">Dr/Dra. ${name}</div>
+            <div class="stat-value">${val}</div>
+            <div class="stat-unit">Horas</div>
+        `;
+        statsGridContent.appendChild(card);
+    });
+
+    // Tarjeta del total
+    const cardTotal = document.createElement('div');
+    cardTotal.className = `stat-card`;
+    cardTotal.style.borderTop = "4px solid #4a5568";
+    cardTotal.innerHTML = `
+        <div class="stat-title">Total Servicio</div>
+        <div class="stat-value">${totalGeneral}</div>
+        <div class="stat-unit">Horas Cubiertas</div>
+    `;
+    statsGridContent.appendChild(cardTotal);
 }
 
 // Iniciar app cuando cargue la página
