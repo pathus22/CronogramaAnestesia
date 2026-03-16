@@ -44,7 +44,7 @@ const cronogramaData = {
             { day: 31, shifts: [{ id: "gonzalez", obs: "(hasta 20 hs)" }] }
         ]
     },
-    "2026-04": { feriados: { 2: "Día del Veterano y de los Caídos en la Guerra de Malvinas", 3: "Viernes Santo", 5: "San Vicente Ferrer" }, dias: [] },
+    "2026-04": { feriados: { 2: "Día del Veterano y de los Caídos en la Guerra de Malvinas", 3: "Viernes Santo", 5: "San Vicente Ferrer" }, dias: [{ day: 5, shifts: [{ id: "paglia", obs: "(hasta 20 hs)" }] }] },
     "2026-05": { feriados: { 1: "Día del Trabajador", 25: "Día de la Revolución de Mayo" }, dias: [] },
     "2026-06": { feriados: { 15: "Paso a la Inmortalidad del Gral. Güemes", 20: "Paso a la Inmortalidad del Gral. Belgrano" }, dias: [] },
     "2026-07": { feriados: { 9: "Día de la Independencia", 10: "Feriado con fines turísticos" }, dias: [] },

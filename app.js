@@ -73,8 +73,8 @@ function renderCalendar() {
     
     // Leer el objeto nuevo y extraer dias y feriados
     const monthDataObj = cronogramaData[monthKey] || { dias: [], feriados: {} };
-    const daysData = Array.isArray(monthDataObj) ? monthDataObj : (monthDataObj.dias || []);
-    const feriadosDelMes = Array.isArray(monthDataObj) ? {} : (monthDataObj.feriados || {});
+    const daysData = monthDataObj.dias || (Array.isArray(monthDataObj) ? monthDataObj : []);
+    const feriadosDelMes = monthDataObj.feriados || {};
 
     // Primer día del mes (0 = Domingo, 1 = Lunes, etc.) - Ajustamos para que Lunes sea 0
     let firstDay = new Date(year, month, 1).getDay();
